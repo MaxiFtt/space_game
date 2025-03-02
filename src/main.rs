@@ -152,12 +152,18 @@ impl EventHandler<ggez::GameError> for GameState {
                 self.player.velocity.y =
                     lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
             }
-            Some(KeyCode::A) => self.player.pos.x += -4.0,
+            Some(KeyCode::A) => {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, 0.0, 2.0 * self.dt.as_secs_f32())
+            }
             Some(KeyCode::S) => {
                 self.player.velocity.y =
                     lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
             }
-            Some(KeyCode::D) => self.player.pos.x += 4.0,
+            Some(KeyCode::D) => {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, 0.0, 2.0 * self.dt.as_secs_f32())
+            }
             _ => (),
         }
         Ok(())
