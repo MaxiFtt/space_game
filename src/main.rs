@@ -33,12 +33,13 @@ struct Player {
     image: graphics::Image,
     pos: Vec2,
     rotation: f32,
-    velocity: f32,
+    velocity: Vec2,
 }
 
 struct GameState {
     player: Player,
     entities: Vec<Entity>,
+    dt: std::time::Duration,
 }
 
 impl GameState {
@@ -48,11 +49,12 @@ impl GameState {
             image: graphics::Image::from_path(ctx, "/PNG/playerShip1_blue.png")?,
             pos: Vec2::new(500.0, 500.0),
             rotation: 0.0,
-            velocity: 0.0,
+            velocity: Vec2::new(0.0, 0.0),
         };
         let s = GameState {
             player,
             entities: vec![],
+            dt: std::time::Duration::new(0, 0),
         };
         Ok(s)
     }
@@ -91,10 +93,16 @@ fn build_player(ctx: &mut Context) -> GameResult<graphics::Mesh> {
 
     Ok(graphics::Mesh::from_data(ctx, mb.build()))
 }
-
+fn lerp(start: f32, end: f32, alpha: f32) -> f32 {
+    start + (end - start) * alpha
+}
 impl EventHandler<ggez::GameError> for GameState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        while ctx.time.check_update_time(60) {}
+        self.dt = ctx.time.delta();
+        while ctx.time.check_update_time(60) {
+            self.player.pos.y += self.player.velocity.y;
+            self.player.pos.x += self.player.velocity.x;
+        }
         Ok(())
     }
 
@@ -114,9 +122,41 @@ impl EventHandler<ggez::GameError> for GameState {
         _repeated: bool,
     ) -> Result<(), ggez::GameError> {
         match input.keycode {
-            Some(KeyCode::W) => self.player.pos.y += -4.0,
+            Some(KeyCode::W) => {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, -10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            Some(KeyCode::A) => {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, -10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            Some(KeyCode::S) => {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, 10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            Some(KeyCode::D) => {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, 10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            _ => (),
+        }
+        Ok(())
+    }
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        input: ggez::input::keyboard::KeyInput,
+    ) -> Result<(), ggez::GameError> {
+        match input.keycode {
+            Some(KeyCode::W) => {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
+            }
             Some(KeyCode::A) => self.player.pos.x += -4.0,
-            Some(KeyCode::S) => self.player.pos.y += 4.0,
+            Some(KeyCode::S) => {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
+            }
             Some(KeyCode::D) => self.player.pos.x += 4.0,
             _ => (),
         }
