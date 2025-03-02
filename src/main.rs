@@ -3,6 +3,7 @@ use std::path;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{self, Color};
 use ggez::input::keyboard::KeyCode;
+use ggez::winit::event::KeyboardInput;
 use ggez::{glam::*, Context, ContextBuilder, GameResult};
 
 fn main() -> GameResult {
@@ -96,12 +97,63 @@ fn build_player(ctx: &mut Context) -> GameResult<graphics::Mesh> {
 fn lerp(start: f32, end: f32, alpha: f32) -> f32 {
     start + (end - start) * alpha
 }
+// fn handle_input(player: &Player, keyboard: KeyboardInput) -> () {
+//
+// }
 impl EventHandler<ggez::GameError> for GameState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         self.dt = ctx.time.delta();
         while ctx.time.check_update_time(60) {
             self.player.pos.y += self.player.velocity.y;
             self.player.pos.x += self.player.velocity.x;
+            if ctx.keyboard.pressed_keys().contains(&KeyCode::A) {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, -10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            if ctx.keyboard.pressed_keys().contains(&KeyCode::D) {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, 10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            if ctx.keyboard.pressed_keys().contains(&KeyCode::W) {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, -10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            if ctx.keyboard.pressed_keys().contains(&KeyCode::S) {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, 10.0, 2.0 * self.dt.as_secs_f32())
+            }
+            let is_x_axis_modified = if ctx
+                .keyboard
+                .pressed_keys()
+                .iter()
+                .filter(|x| **x == KeyCode::D || **x == KeyCode::A)
+                .collect::<Vec<_>>()
+                .is_empty()
+            {
+                false
+            } else {
+                true
+            };
+            let is_y_axis_modified = if ctx
+                .keyboard
+                .pressed_keys()
+                .iter()
+                .filter(|x| **x == KeyCode::W || **x == KeyCode::S)
+                .collect::<Vec<_>>()
+                .is_empty()
+            {
+                false
+            } else {
+                true
+            };
+            if !is_x_axis_modified {
+                self.player.velocity.x =
+                    lerp(self.player.velocity.x, 0.0, 5.0 * self.dt.as_secs_f32())
+            }
+            if !is_y_axis_modified {
+                self.player.velocity.y =
+                    lerp(self.player.velocity.y, 0.0, 5.0 * self.dt.as_secs_f32())
+            }
         }
         Ok(())
     }
@@ -119,53 +171,9 @@ impl EventHandler<ggez::GameError> for GameState {
         &mut self,
         ctx: &mut Context,
         input: ggez::input::keyboard::KeyInput,
-        _repeated: bool,
+        repeated: bool,
     ) -> Result<(), ggez::GameError> {
-        match input.keycode {
-            Some(KeyCode::W) => {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, -10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::A) => {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, -10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::S) => {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, 10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::D) => {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, 10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            _ => (),
-        }
-        Ok(())
-    }
-    fn key_up_event(
-        &mut self,
-        _ctx: &mut Context,
-        input: ggez::input::keyboard::KeyInput,
-    ) -> Result<(), ggez::GameError> {
-        match input.keycode {
-            Some(KeyCode::W) => {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::A) => {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, 0.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::S) => {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, 0.0, 2.0 * self.dt.as_secs_f32())
-            }
-            Some(KeyCode::D) => {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, 0.0, 2.0 * self.dt.as_secs_f32())
-            }
-            _ => (),
-        }
+        println!("{:?}", input.mods);
         Ok(())
     }
 }
