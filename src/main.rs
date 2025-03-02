@@ -3,6 +3,7 @@ use std::path;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{self, Color};
 use ggez::input::keyboard::KeyCode;
+use ggez::input::mouse::handle_move;
 use ggez::winit::event::KeyboardInput;
 use ggez::{glam::*, Context, ContextBuilder, GameResult};
 
@@ -97,31 +98,27 @@ fn build_player(ctx: &mut Context) -> GameResult<graphics::Mesh> {
 fn lerp(start: f32, end: f32, alpha: f32) -> f32 {
     start + (end - start) * alpha
 }
-// fn handle_input(player: &Player, keyboard: KeyboardInput) -> () {
-//
-// }
+fn handle_input(player: &mut Player, ctx: &mut Context, dt: std::time::Duration) -> () {
+    if ctx.keyboard.pressed_keys().contains(&KeyCode::A) {
+        player.velocity.x = lerp(player.velocity.x, -10.0, 2.0 * dt.as_secs_f32())
+    }
+    if ctx.keyboard.pressed_keys().contains(&KeyCode::D) {
+        player.velocity.x = lerp(player.velocity.x, 10.0, 2.0 * dt.as_secs_f32())
+    }
+    if ctx.keyboard.pressed_keys().contains(&KeyCode::W) {
+        player.velocity.y = lerp(player.velocity.y, -10.0, 2.0 * dt.as_secs_f32())
+    }
+    if ctx.keyboard.pressed_keys().contains(&KeyCode::S) {
+        player.velocity.y = lerp(player.velocity.y, 10.0, 2.0 * dt.as_secs_f32())
+    }
+}
 impl EventHandler<ggez::GameError> for GameState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         self.dt = ctx.time.delta();
         while ctx.time.check_update_time(60) {
             self.player.pos.y += self.player.velocity.y;
             self.player.pos.x += self.player.velocity.x;
-            if ctx.keyboard.pressed_keys().contains(&KeyCode::A) {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, -10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            if ctx.keyboard.pressed_keys().contains(&KeyCode::D) {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, 10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            if ctx.keyboard.pressed_keys().contains(&KeyCode::W) {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, -10.0, 2.0 * self.dt.as_secs_f32())
-            }
-            if ctx.keyboard.pressed_keys().contains(&KeyCode::S) {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, 10.0, 2.0 * self.dt.as_secs_f32())
-            }
+            handle_input(&mut self.player, ctx, self.dt);
             let is_x_axis_modified = if ctx
                 .keyboard
                 .pressed_keys()
