@@ -3,10 +3,11 @@ use std::path;
 use ggez::event::{self, EventHandler};
 use ggez::graphics::{self, Color};
 use ggez::input::keyboard::KeyCode;
-use ggez::input::mouse::handle_move;
 use ggez::winit::event::KeyboardInput;
 use ggez::{glam::*, Context, ContextBuilder, GameResult};
 
+mod lerp;
+use crate::lerp::Lerp;
 fn main() -> GameResult {
     // Make a Context.
     let resource_path = path::PathBuf::from("./resources");
@@ -95,21 +96,18 @@ fn build_player(ctx: &mut Context) -> GameResult<graphics::Mesh> {
 
     Ok(graphics::Mesh::from_data(ctx, mb.build()))
 }
-fn lerp(start: f32, end: f32, alpha: f32) -> f32 {
-    start + (end - start) * alpha
-}
 fn handle_input(player: &mut Player, ctx: &mut Context, dt: std::time::Duration) -> () {
     if ctx.keyboard.pressed_keys().contains(&KeyCode::A) {
-        player.velocity.x = lerp(player.velocity.x, -10.0, 2.0 * dt.as_secs_f32())
+        player.velocity.x.lerp(-10.0, 2.0 * dt.as_secs_f32());
     }
     if ctx.keyboard.pressed_keys().contains(&KeyCode::D) {
-        player.velocity.x = lerp(player.velocity.x, 10.0, 2.0 * dt.as_secs_f32())
+        player.velocity.x.lerp(10.0, 2.0 * dt.as_secs_f32());
     }
     if ctx.keyboard.pressed_keys().contains(&KeyCode::W) {
-        player.velocity.y = lerp(player.velocity.y, -10.0, 2.0 * dt.as_secs_f32())
+        player.velocity.y.lerp(-10.0, 2.0 * dt.as_secs_f32());
     }
     if ctx.keyboard.pressed_keys().contains(&KeyCode::S) {
-        player.velocity.y = lerp(player.velocity.y, 10.0, 2.0 * dt.as_secs_f32())
+        player.velocity.y.lerp(10.0, 2.0 * dt.as_secs_f32());
     }
 }
 impl EventHandler<ggez::GameError> for GameState {
@@ -144,12 +142,16 @@ impl EventHandler<ggez::GameError> for GameState {
                 true
             };
             if !is_x_axis_modified {
-                self.player.velocity.x =
-                    lerp(self.player.velocity.x, 0.0, 5.0 * self.dt.as_secs_f32())
+                self.player
+                    .velocity
+                    .x
+                    .lerp(0.0, 5.0 * self.dt.as_secs_f32())
             }
             if !is_y_axis_modified {
-                self.player.velocity.y =
-                    lerp(self.player.velocity.y, 0.0, 5.0 * self.dt.as_secs_f32())
+                self.player
+                    .velocity
+                    .y
+                    .lerp(0.0, 5.0 * self.dt.as_secs_f32())
             }
         }
         Ok(())
